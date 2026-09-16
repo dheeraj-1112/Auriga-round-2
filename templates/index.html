@@ -1,38 +1,178 @@
 {% extends "base.html" %}
-{% block title %}Gift Pool — Home{% endblock %}
+
+{% block title %}Gift Pool — Collect Together{% endblock %}
 
 {% block content %}
-<section class="card">
-    <h1>Start a gift pool</h1>
-    <p class="muted">Create a pool for any farewell gift, celebration, or shared purchase.</p>
-    <form method="post" action="{{ url_for('main.create_pool') }}" class="form-grid">
-        <label>
-            Organiser name
-            <input type="text" name="organiser_name" placeholder="e.g. Priya" required>
-        </label>
-        <label>
-            Budget (₹)
-            <input type="text" name="budget" placeholder="e.g. 6000" inputmode="decimal" required>
-        </label>
-        <button type="submit" class="btn-primary">Create pool</button>
-    </form>
+
+<section class="hero-section">
+    <div class="hero-copy">
+        <span class="eyebrow">🎁 Shared moments, made simple</span>
+
+        <h1>
+            Collect together.<br>
+            <span class="hero-highlight">Celebrate together.</span>
+        </h1>
+
+        <p class="hero-description">
+            Create a shared gift fund, track every contribution,
+            and settle everyone fairly without complicated calculations.
+        </p>
+
+        <div class="hero-benefits">
+            <span>✓ Easy contribution tracking</span>
+            <span>✓ Clear collection progress</span>
+            <span>✓ Automatic settlement</span>
+        </div>
+    </div>
+
+    <div class="hero-visual" aria-hidden="true">
+        <div class="gift-orbit orbit-one"></div>
+        <div class="gift-orbit orbit-two"></div>
+
+        <div class="gift-card">
+            <div class="gift-icon">🎁</div>
+            <div class="gift-card-title">A little from everyone</div>
+            <div class="gift-card-subtitle">A lot of happiness</div>
+        </div>
+
+        <div class="floating-note note-one">💜 Together</div>
+        <div class="floating-note note-two">₹ Shared fund</div>
+    </div>
 </section>
 
-<section class="card">
-    <h2>Existing pools</h2>
+<section class="card create-card" id="create-pool">
+    <div class="section-heading">
+        <div>
+            <span class="section-kicker">GET STARTED</span>
+            <h2>Start your gift pool</h2>
+            <p class="muted">
+                Set a budget and invite your friends to contribute.
+            </p>
+        </div>
+
+        <div class="section-symbol" aria-hidden="true">✨</div>
+    </div>
+
+    <form
+        method="post"
+        action="{{ url_for('main.create_pool') }}"
+        class="form-grid"
+    >
+        <label>
+            Organiser name
+            <input
+                type="text"
+                name="organiser_name"
+                placeholder="e.g. Priya"
+                autocomplete="name"
+                required
+            >
+        </label>
+
+        <label>
+            Budget (₹)
+            <input
+                type="text"
+                name="budget"
+                placeholder="e.g. 6000"
+                inputmode="decimal"
+                required
+            >
+        </label>
+
+        <button type="submit" class="btn-primary create-button">
+            Create pool <span aria-hidden="true">→</span>
+        </button>
+    </form>
+
+    <p class="form-helper">
+        No account required. Start tracking your shared fund in seconds.
+    </p>
+</section>
+
+<section class="feature-strip" aria-label="Gift Pool benefits">
+    <div class="feature-item">
+        <div class="feature-icon">📊</div>
+        <div>
+            <strong>Track progress</strong>
+            <p>See how close you are to your goal.</p>
+        </div>
+    </div>
+
+    <div class="feature-item">
+        <div class="feature-icon">🤝</div>
+        <div>
+            <strong>Keep it fair</strong>
+            <p>Understand each member’s balance.</p>
+        </div>
+    </div>
+
+    <div class="feature-item">
+        <div class="feature-icon">🧾</div>
+        <div>
+            <strong>Settle easily</strong>
+            <p>Know who needs to pay or receive.</p>
+        </div>
+    </div>
+</section>
+
+<section class="card pools-card">
+    <div class="section-heading">
+        <div>
+            <span class="section-kicker">YOUR ACTIVITY</span>
+            <h2>Existing pools</h2>
+            <p class="muted">
+                Open a pool to view members, contributions, and settlement details.
+            </p>
+        </div>
+
+        <div class="pool-count" aria-label="Number of existing pools">
+            {% if pools %}
+                {{ pools|length }}
+            {% else %}
+                0
+            {% endif %}
+        </div>
+    </div>
+
     {% if pools %}
         <ul class="pool-list">
             {% for pool in pools %}
                 <li>
-                    <a href="{{ url_for('main.pool_detail', pool_id=pool['id']) }}">
-                        <strong>{{ pool['organiser_name'] }}'s pool</strong>
-                        — budget ₹{{ paise_to_rupees_str(pool['budget_paise']) }}
+                    <a
+                        href="{{ url_for('main.pool_detail', pool_id=pool['id']) }}"
+                        class="pool-link"
+                    >
+                        <span class="pool-link-icon" aria-hidden="true">🎁</span>
+
+                        <span class="pool-link-content">
+                            <strong>{{ pool['organiser_name'] }}'s pool</strong>
+                            <span>
+                                Budget ₹{{ paise_to_rupees_str(pool['budget_paise']) }}
+                            </span>
+                        </span>
+
+                        <span class="pool-link-arrow" aria-hidden="true">→</span>
                     </a>
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p class="empty-state">No pools yet. Create one above to get started.</p>
+        <div class="empty-state enhanced-empty-state">
+            <div class="empty-icon" aria-hidden="true">🎈</div>
+
+            <h3>Your first gift pool starts here</h3>
+
+            <p>
+                Create a pool above and bring everyone together for
+                your next farewell, birthday, celebration, or shared purchase.
+            </p>
+
+            <a href="#create-pool" class="empty-action">
+                Create your first pool →
+            </a>
+        </div>
     {% endif %}
 </section>
+
 {% endblock %}
