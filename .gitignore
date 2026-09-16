@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+gift_pool.db
+.pytest_cache/
+*.egg-info/

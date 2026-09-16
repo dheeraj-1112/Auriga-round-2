@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}{{ pool['organiser_name'] }}'s pool{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>{{ pool['organiser_name'] }}'s gift pool</h1>
+    <p class="muted">Budget: ₹{{ paise_to_rupees_str(pool['budget_paise']) }}</p>
+
+    <div class="progress-wrap" title="{{ progress_pct }}% collected">
+        <div class="progress-bar" style="width: {{ progress_pct }}%"></div>
+    </div>
+    <p class="progress-label">{{ progress_pct }}% collected</p>
+
+    <div class="totals-grid">
+        <div class="stat">
+            <span class="stat-label">Total collected</span>
+            <span class="stat-value">₹{{ paise_to_rupees_str(totals['total_collected_paise']) }}</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Budget</span>
+            <span class="stat-value">₹{{ paise_to_rupees_str(totals['budget_paise']) }}</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">
+                {% if totals['remaining_paise'] > 0 %}Remaining to collect
+                {% elif totals['remaining_paise'] < 0 %}Collected over budget
+                {% else %}Fully collected{% endif %}
+            </span>
+            <span class="stat-value">₹{{ paise_to_rupees_str(totals['remaining_paise'] | abs) }}</span>
+        </div>
+    </div>
+</section>
+
+<section class="card">
+    <h2>Add a member</h2>
+    <form method="post" action="{{ url_for('main.add_member', pool_id=pool['id']) }}" class="form-inline">
+        <input type="text" name="name" placeholder="Member name" required>
+        <button type="submit" class="btn-secondary">Add member</button>
+    </form>
+</section>
+
+<section class="card">
+    <h2>Members</h2>
+    {% if members %}
+    <div class="table-scroll">
+    <table class="member-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Fair share</th>
+                <th>Paid</th>
+                <th>Balance</th>
+                <th>Record contribution</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in members %}
+            <tr>
+                <td>
+                    <form method="post" action="{{ url_for('main.rename_member', pool_id=pool['id'], member_id=m['id']) }}" class="inline-rename">
+                        <input type="text" name="name" value="{{ m['name'] }}" class="name-input">
+                        <button type="submit" class="btn-tiny">Rename</button>
+                    </form>
+                </td>
+                <td>₹{{ paise_to_rupees_str(m['share_paise']) }}</td>
+                <td>₹{{ paise_to_rupees_str(m['paid_paise']) }}</td>
+                <td class="{% if m['balance_paise'] < 0 %}balance-negative{% elif m['balance_paise'] > 0 %}balance-positive{% else %}balance-zero{% endif %}">
+                    {% if m['balance_paise'] < 0 %}
+                        owes ₹{{ paise_to_rupees_str(m['balance_paise'] | abs) }}
+                    {% elif m['balance_paise'] > 0 %}
+                        overpaid ₹{{ paise_to_rupees_str(m['balance_paise']) }}
+                    {% else %}
+                        settled
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="post" action="{{ url_for('main.add_contribution', pool_id=pool['id'], member_id=m['id']) }}" class="form-inline">
+                        <input type="text" name="amount" placeholder="₹ amount" inputmode="decimal" required class="amount-input">
+                        <button type="submit" class="btn-tiny">Add payment</button>
+                    </form>
+                </td>
+                <td>
+                    <form method="post" action="{{ url_for('main.remove_member', pool_id=pool['id'], member_id=m['id']) }}"
+                          onsubmit="return confirm('Remove {{ m['name'] }} and their contribution history?');">
+                        <button type="submit" class="btn-danger-tiny">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+        <p class="empty-state">No members yet. Add members above before recording contributions.</p>
+    {% endif %}
+</section>
+
+<section class="card">
+    <h2>Settlement — who pays whom</h2>
+    {% if settlement['transactions'] %}
+        <ul class="settlement-list" id="settlement-list">
+            {% for t in settlement['transactions'] %}
+                <li>{{ t['from_name'] }} → {{ t['to_name'] }}: ₹{{ paise_to_rupees_str(t['amount_paise']) }}</li>
+            {% endfor %}
+        </ul>
+        <button type="button" class="btn-secondary" id="copy-settlement-btn">Copy settlement instructions</button>
+    {% else %}
+        {% if members %}
+            <p class="empty-state">No member-to-member transfers needed right now.</p>
+        {% else %}
+            <p class="empty-state">Add members and record contributions to see settlement suggestions.</p>
+        {% endif %}
+    {% endif %}
+
+    {% if settlement['unmatched_debt_paise'] > 0 %}
+        <p class="note-warning">
+            ₹{{ paise_to_rupees_str(settlement['unmatched_debt_paise']) }} is still owed to the pool overall
+            (the pool is under-collected — no member currently holds a surplus to cover this).
+        </p>
+    {% endif %}
+    {% if settlement['unmatched_credit_paise'] > 0 %}
+        <p class="note-warning">
+            The pool has collected ₹{{ paise_to_rupees_str(settlement['unmatched_credit_paise']) }} more than the budget
+            (a surplus / refund, not owed by any specific member).
+        </p>
+    {% endif %}
+    <p class="muted small">
+        Settlement is computed with a largest-debtor/largest-creditor greedy match — it is correct and minimizes
+        wasted transfers in practice, but is not guaranteed to be the mathematically minimum number of transactions.
+    </p>
+</section>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Gift Pool — Home{% endblock %}
+
+{% block content %}
+<section class="card">
+    <h1>Start a gift pool</h1>
+    <p class="muted">Create a pool for any farewell gift, celebration, or shared purchase.</p>
+    <form method="post" action="{{ url_for('main.create_pool') }}" class="form-grid">
+        <label>
+            Organiser name
+            <input type="text" name="organiser_name" placeholder="e.g. Priya" required>
+        </label>
+        <label>
+            Budget (₹)
+            <input type="text" name="budget" placeholder="e.g. 6000" inputmode="decimal" required>
+        </label>
+        <button type="submit" class="btn-primary">Create pool</button>
+    </form>
+</section>
+
+<section class="card">
+    <h2>Existing pools</h2>
+    {% if pools %}
+        <ul class="pool-list">
+            {% for pool in pools %}
+                <li>
+                    <a href="{{ url_for('main.pool_detail', pool_id=pool['id']) }}">
+                        <strong>{{ pool['organiser_name'] }}'s pool</strong>
+                        — budget ₹{{ paise_to_rupees_str(pool['budget_paise']) }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">No pools yet. Create one above to get started.</p>
+    {% endif %}
+</section>
+{% endblock %}
